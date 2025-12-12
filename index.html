@@ -1,0 +1,1647 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>系統平台複習小測驗</title>
+    <!-- 載入 Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- 載入 Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600&display=swap" rel="stylesheet">
+    <style>
+        /* 字體設定 */
+        body {
+            font-family: 'Fredoka', '微軟正黑體', sans-serif;
+            background-color: #fce7f3; /* 柔和粉色背景 */
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            margin: 0;
+            overflow-x: hidden;
+        }
+
+        /* 桌面測驗容器 */
+        .quiz-desktop-container {
+            width: 100%;
+            max-width: 1000px; /* 寬廣的桌面視圖 */
+            min-height: 80vh;
+            background-color: #ffffff;
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            display: flex;
+            flex-direction: column; /* 讓內容垂直排列 */
+        }
+
+        /* 內容容器 */
+        .content-container {
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-start;
+            flex: 1; /* 佔滿剩餘空間 */
+        }
+
+        /* 自定義訊息框 (定位到頂部中央) */
+        #message-box.opacity-100 {
+            top: 4rem; /* 位於頂部，避免遮擋作答區 */
+            position: fixed;
+            z-index: 100;
+        }
+
+        /* --- Drag and Drop Styles (Q1) --- */
+        .drag-item {
+            cursor: grab;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 8px 12px;
+            border-radius: 12px;
+            font-weight: 600;
+            font-size: 1rem;
+            box-shadow: 0 3px 0 rgba(0,0,0,0.2);
+            border: 2px solid;
+            transition: all 0.15s;
+            touch-action: none;
+            background-color: white;
+            user-select: none; 
+        }
+        .dragging {
+            opacity: 0.5;
+            transform: scale(0.9);
+            cursor: grabbing;
+        }
+
+        .drop-zone {
+            display: inline-block;
+            min-width: 4rem; 
+            min-height: 1.5rem;
+            padding: 0 4px;
+            border-bottom: 2px dashed #a855f7; 
+            margin: 0 0.5rem;
+            vertical-align: middle;
+        }
+        .drop-zone.filled {
+             border-bottom: none; 
+        }
+        .drop-zone.drag-over {
+            background-color: #f3e8ff; 
+        }
+        
+        /* --- Category Styles --- */
+        .category-target {
+            min-height: 120px;
+            padding: 1rem;
+            border: 3px dashed;
+            border-radius: 16px;
+            transition: all 0.2s;
+        }
+        .category-target.drag-over {
+            transform: scale(1.05);
+            background-color: rgba(255, 255, 255, 0.7) !important;
+            border-style: solid;
+        }
+        .category-item {
+            cursor: grab;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 0.5rem;
+            border-radius: 12px;
+            box-shadow: 0 3px 0 rgba(0,0,0,0.2);
+            border: 2px solid;
+            transition: all 0.15s;
+            background-color: white;
+            color: #374151;
+            font-size: 0.9rem;
+            width: 110px; 
+            height: 100px;
+            flex-shrink: 0;
+            margin: 4px;
+        }
+        .category-item .emoji {
+            font-size: 1.5rem;
+            margin-bottom: 4px;
+        }
+        /* 確保項目掉入後佔滿整個容器 */
+        .category-target .item-container .category-item,
+        .fixed-slot .drag-item,
+        .fixed-slot .category-item {
+            width: 100% !important;
+            height: 100% !important;
+            margin: 0 !important;
+            padding: 0;
+            border: none;
+            box-shadow: none;
+            background: transparent;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        /* 固定方框 (Slots) 通用樣式 */
+        .fixed-slot {
+            width: 100px;
+            height: 100px;
+            border: 3px dashed #cbd5e1; /* 虛線邊框 */
+            border-radius: 12px;
+            background-color: #f1f5f9; /* 淺灰底色 */
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+            flex-shrink: 0;
+            margin: 5px; /* 間距 */
+        }
+        .fixed-slot.drag-over {
+            background-color: #e0e7ff;
+            border-color: #6366f1;
+            transform: scale(1.05);
+        }
+
+        /* Q3 五大單元樣式 */
+        .q3-desc-box {
+            border: 2px solid #e5e7eb;
+            border-radius: 12px;
+            padding: 15px;
+            background-color: #fff;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: space-between;
+            height: 100%;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+        }
+        .q3-desc-text {
+            font-size: 0.95rem;
+            color: #4b5563;
+            margin-bottom: 10px;
+            text-align: center;
+            font-weight: bold;
+        }
+
+        /* Q5, Q6 速度標題 */
+        .q-row-layout {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 15px;
+            background: white;
+            padding: 10px;
+            border-radius: 15px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+        }
+        .q-label-title {
+            font-size: 1.5rem;
+            font-weight: 800;
+            color: #10b981; 
+            text-align: center;
+            margin-right: 20px;
+            width: 120px;
+        }
+
+        /* Q7 電腦元件發展史 (水平排列) */
+        .gen-container {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 10px;
+            width: 100%;
+        }
+        .gen-column {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            background-color: white;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        .gen-header {
+            width: 100%;
+            padding: 10px 0;
+            text-align: center;
+            font-weight: bold;
+            color: white;
+        }
+        .gen-body {
+            padding: 15px;
+            display: flex;
+            justify-content: center;
+            width: 100%;
+            min-height: 120px; /* 確保有足夠空間放格子 */
+        }
+
+        /* --- Q2 Table Selection Styles --- */
+        .table-check-container {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0;
+            overflow: hidden;
+            border-radius: 12px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+        }
+        .table-check-container th {
+            background-color: #f9a8d4; 
+            color: white;
+            font-weight: 600;
+            padding: 12px 10px;
+            text-align: center;
+            transition: background-color 0.3s; 
+        }
+        .table-check-container td:first-child {
+            font-weight: bold;
+            color: #4b5563;
+            text-align: left;
+            width: 30%; 
+            transition: all 0.3s;
+        }
+        .table-check-container td {
+            background-color: #fff;
+            border-bottom: 1px solid #fce7f3;
+            padding: 10px;
+            text-align: center;
+            transition: background-color 0.3s;
+        }
+        .check-box-wrapper {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .check-box {
+            width: 32px;
+            height: 32px;
+            border: 2px solid #a855f7; 
+            border-radius: 8px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.15s;
+            background-color: #f3e8ff;
+        }
+        .check-box.checked {
+            background-color: #a855f7;
+            border-color: #a855f7;
+            transform: scale(1.05);
+        }
+        .check-mark {
+            color: white;
+            font-size: 20px;
+            line-height: 1;
+            transition: opacity 0.15s;
+        }
+        
+        /* Q5 速度標題的特殊樣式 */
+        .q5-speed-title {
+            font-size: 1.5rem;
+            font-weight: 800;
+            color: #10b981; 
+            text-align: center;
+            margin: 0 10px;
+            flex-shrink: 0;
+            line-height: 1.2;
+        }
+        
+        /* Q6 表格列 */
+        .q5-row {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 1rem;
+            padding: 10px 0;
+        }
+        .q5-slots {
+            display: flex;
+            gap: 15px; /* 增加間距 */
+            flex-grow: 1;
+            justify-content: center; /* 確保置中 */
+            align-items: center;
+        }
+
+    </style>
+</head>
+<body class="flex items-center justify-center min-h-screen p-4">
+
+    <!-- Quiz 容器 -->
+    <div id="quiz-container" class="quiz-desktop-container">
+        <div class="content-container"> 
+            
+            <!-- 標題區域 -->
+            <header class="mb-6 text-center">
+                <div class="inline-block bg-white px-6 py-2 rounded-full shadow-sm mb-4">
+                    <span class="text-pink-500 font-bold tracking-wider">UNIT 1 REVIEW</span>
+                </div>
+                <h1 class="text-3xl md:text-4xl font-bold text-gray-800 drop-shadow-sm">
+                    💻 系統平台小測驗
+                </h1>
+            </header>
+
+            <!-- 初始畫面 -->
+            <div id="start-screen" class="text-center flex-1 flex flex-col justify-center items-center h-full">
+                <div class="bg-white p-8 rounded-[3rem] shadow-xl mb-8 w-64 h-64 flex items-center justify-center border-4 border-pink-200 animate-bounce">
+                    <span class="text-8xl">🚀</span>
+                </div>
+                <h2 class="text-2xl md:text-3xl font-bold mb-3 text-gray-700">準備好了嗎？</h2>
+                <p class="text-lg text-gray-500 mb-8">讓我們來複習一下課本重點吧！</p>
+                
+                <button onclick="startQuiz()" class="w-full max-w-xs bg-gradient-to-r from-green-400 to-green-500 text-white text-2xl font-bold py-4 rounded-2xl shadow-3d hover:brightness-105 active:scale-95 transition-all">
+                    開始挑戰
+                </button>
+            </div>
+
+            <!-- 答題介面 -->
+            <div id="question-display" class="hidden flex-1 flex flex-col">
+                <!-- 題目卡片 -->
+                <div class="bg-white rounded-3xl p-6 shadow-lg mb-6 border-l-8 border-purple-400">
+                    <div class="flex items-center mb-4">
+                        <span class="bg-purple-100 text-purple-600 px-3 py-1 rounded-lg font-bold text-sm mr-2">QUESTION</span>
+                        <span id="question-number" class="text-2xl font-bold text-purple-600"></span>
+                    </div>
+                    <!-- 題目文字區域 (多用於 D&D 題目的指令或 Match 題的標題) -->
+                    <div id="question-text-wrapper" class="text-xl md:text-2xl font-bold text-gray-800 leading-relaxed">
+                         <p id="question-text"></p>
+                    </div>
+                </div>
+
+                <!-- 選項/拖曳/連連看區塊 -->
+                <div id="options-container" class="space-y-4 mb-8 flex-1">
+                    <!-- JS 動態生成選項 -->
+                </div>
+
+                <!-- 導覽與確認按鈕 -->
+                <div class="mt-auto pt-4 flex justify-between items-center">
+                    <button id="prev-btn" onclick="prevQuestion()" class="px-4 py-2 bg-gray-300 rounded-xl shadow-md hover:bg-gray-400 transition text-gray-800 font-bold" disabled>上一題</button>
+                    
+                    <button onclick="checkAnswer()" class="max-w-xs bg-gray-800 text-white text-lg font-bold py-3 px-8 rounded-xl shadow-3d hover:bg-gray-700 active:scale-95 transition-all flex items-center justify-center">
+                        <span>確認答案</span>
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 ml-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                        </svg>
+                    </button>
+                    
+                    <button id="next-btn" onclick="nextQuestion()" class="px-4 py-2 bg-purple-500 text-white rounded-xl shadow-md hover:bg-purple-600 transition font-bold">下一題</button>
+                </div>
+            </div>
+
+            <!-- 結果畫面 -->
+            <div id="result-display" class="hidden text-center flex-1 flex flex-col justify-center items-center">
+                <div class="bg-white p-8 rounded-3xl shadow-xl w-full max-w-sm border-4 border-dashed border-gray-300">
+                    <div id="result-icon" class="text-8xl mb-4">🎉</div>
+                    <h2 id="final-message" class="text-3xl font-extrabold mb-2"></h2>
+                    <div class="my-6">
+                        <span class="text-gray-400 text-sm uppercase tracking-widest">Score</span>
+                        <div class="text-6xl font-bold text-gray-800" id="final-score-number"></div>
+                        <p id="final-score-text" class="text-gray-500 mt-2"></p>
+                    </div>
+                    <button onclick="restartQuiz()" class="w-full bg-yellow-400 text-yellow-900 text-xl font-bold py-3 rounded-xl shadow-3d hover:bg-yellow-300 active:scale-95 transition-all">
+                        再玩一次
+                    </button>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <script type="text/javascript">
+        // 測驗題目資料
+        const quizData = [
+            {
+                type: 'drag_and_drop', // Q1: 拖曳填空
+                question: "系統平台又稱[__]平臺，指的是利用電腦的[__]，來提供使用者各項[__]的[__]。",
+                blanks: ["運算", "運算能力", "服務", "執行環境"], 
+                options: ["運算", "運算能力", "服務", "執行環境"],
+            },
+            {
+                type: 'table_selection', // Q2: 表格勾選 
+                question: "請將下列系統平台，分類為「傳統系統平台」或「新興系統平台」。",
+                columns: ["平台種類", "傳統系統平台", "新興系統平台"],
+                // 0: 傳統, 1: 新興 (用於內部檢查)
+                platformData: [
+                    { name: "電腦系統平台", classification: 0 },
+                    { name: "可攜式系統平台", classification: 1 },
+                    { name: "雲端系統平台", classification: 1 },
+                    { name: "嵌入式系統平台", classification: 1 },
+                ]
+            },
+            {
+                type: 'dnd_units_reverse', // Q3: 五大單元 (反轉: 元件拖曳到功能)
+                question: "請將上方的五大單元名稱，拖曳至下方對應的功能描述方框中。",
+                units: [
+                    { name: "輸入單元", unitId: 'input', emoji: '📥' },
+                    { name: "輸出單元", unitId: 'output', emoji: '📤' },
+                    { name: "記憶單元", unitId: 'memory', emoji: '💾' },
+                    { name: "控制單元", unitId: 'control', emoji: '🎮' },
+                    { name: "算術與邏輯單元", unitId: 'alu', emoji: '➕' }
+                ],
+                descriptions: [
+                    { text: "輸入外部資訊到系統內", unitId: 'input', color: 'bg-red-100 border-red-300' },
+                    { text: "輸出運算結果到設備中", unitId: 'output', color: 'bg-green-100 border-green-300' },
+                    { text: "進行資訊的儲存", unitId: 'memory', color: 'bg-yellow-100 border-yellow-300' },
+                    { text: "控制、協調各單元之間的合作", unitId: 'control', color: 'bg-blue-100 border-blue-300' },
+                    { text: "進行二進位的運算和邏輯運算", unitId: 'alu', color: 'bg-purple-100 border-purple-300' }
+                ]
+            },
+            {
+                type: 'category_bucket', // Q4: 應用實例
+                question: "請將上方的實際應用範例，拖曳至下方的正確系統平台分類中。",
+                categories: [
+                    { name: "電腦系統平台", id: 'traditional', color: 'border-orange-400 bg-orange-50' },
+                    { name: "可攜式系統平台", id: 'portable', color: 'border-blue-400 bg-blue-50' },
+                    { name: "雲端系統平台", id: 'cloud', color: 'border-green-400 bg-green-50' },
+                    { name: "嵌入式系統平台", id: 'embedded', color: 'border-purple-4个 bg-purple-50' }
+                ],
+                items: [
+                    { name: "筆記型電腦 (NB)", categoryId: 'traditional', emoji: '💻' },
+                    { name: "智慧型手機", categoryId: 'portable', emoji: '📱' },
+                    { name: "Gmail/雲端郵件", categoryId: 'cloud', emoji: '📧' },
+                    { name: "全自動洗衣機", categoryId: 'embedded', emoji: '🧺' }
+                ]
+            },
+            {
+                type: 'category_slots', // Q5: I/O (4 slots each - 2x2 layout)
+                question: "請將下列週邊設備，拖曳至正確的電腦單元分類格子中 (一格一個)。",
+                categories: [
+                    { name: "輸入單元 (Input)", id: 'input', color: 'border-pink-400 bg-pink-100', slots: 4 },
+                    { name: "輸出單元 (Output)", id: 'output', color: 'border-cyan-400 bg-cyan-100', slots: 4 }
+                ],
+                items: [
+                    { name: "攝影機", categoryId: 'input', emoji: '🎥' },
+                    { name: "鍵盤", categoryId: 'input', emoji: '⌨️' },
+                    { name: "滑鼠", categoryId: 'input', emoji: '🖱️' },
+                    { name: "麥克風", categoryId: 'input', emoji: '🎤' },
+                    { name: "耳機", categoryId: 'output', emoji: '🎧' }, 
+                    { name: "喇叭", categoryId: 'output', emoji: '🔊' },
+                    { name: "印表機", categoryId: 'output', emoji: '🖨️' },
+                    { name: "螢幕", categoryId: 'output', emoji: '🖥️' }
+                ]
+            },
+            {
+                type: 'table_sort_random', // Q6: 記憶體階層 (隨機化)
+                question: "請依據指定條件，將記憶體種類拖曳至表格中的正確位置。",
+                // 題目將在載入時動態生成
+                variations: [
+                    { labelStart: "存取速度", labelEnd: "快 ⮕ 慢", type: "speed_fast_slow", order: ["register", "cache", "ram", "secondary"] },
+                    { labelStart: "存取速度", labelEnd: "慢 ⮕ 快", type: "speed_slow_fast", order: ["secondary", "ram", "cache", "register"] },
+                    { labelStart: "價格", labelEnd: "高 ⮕ 低", type: "price_high_low", order: ["register", "cache", "ram", "secondary"] },
+                    { labelStart: "價格", labelEnd: "低 ⮕ 高", type: "price_low_high", order: ["secondary", "ram", "cache", "register"] },
+                    { labelStart: "容量", labelEnd: "大 ⮕ 小", type: "cap_large_small", order: ["secondary", "ram", "cache", "register"] },
+                    { labelStart: "容量", labelEnd: "小 ⮕ 大", type: "cap_small_large", order: ["register", "cache", "ram", "secondary"] }
+                ],
+                sourceItems: [
+                    { id: 'register', name: "暫存器", emoji: "⚡" },
+                    { id: 'cache', name: "快取", emoji: "🚅" },
+                    { id: 'ram', name: "主記憶體", emoji: "🧠" },
+                    { id: 'secondary', name: "輔助記憶體", emoji: "💾" }
+                ]
+            },
+            {
+                 type: 'category_slots_gen', // Q7: 電腦元件發展史
+                 question: "請將下方的電腦主要元件，拖曳到對應的電腦世代 (水平排列)。",
+                 categories: [
+                    { name: "第一代", id: 'gen1', color: 'bg-red-500', slots: 1 },
+                    { name: "第二代", id: 'gen2', color: 'bg-orange-500', slots: 1 },
+                    { name: "第三代", id: 'gen3', color: 'bg-yellow-500', slots: 1 },
+                    { name: "第四代", id: 'gen4', color: 'bg-green-500', slots: 1 },
+                    { name: "第五代", id: 'gen5', color: 'bg-blue-500', slots: 1 }
+                 ],
+                 items: [
+                     { name: "積體電路 (IC)", categoryId: 'gen3', emoji: '🔸' },
+                     { name: "真空管", categoryId: 'gen1', emoji: '💡' },
+                     { name: "超大型積體電路 (VLSI)", categoryId: 'gen4', emoji: '🔺' },
+                     { name: "電晶體", categoryId: 'gen2', emoji: '🔘' },
+                     { name: "小元件、多核心", categoryId: 'gen5', emoji: '🌐' }
+                 ]
+            },
+            {
+                 type: 'drag_and_drop_2col', // Q8: 英文縮寫
+                 question: "請將左側的英文縮寫，拖曳到右側正確的中文名稱上。",
+                 leftItems: [
+                     { name: "Big Data", value: 'big_data' },
+                     { name: "AI", value: 'ai' },
+                     { name: "IoT", value: 'iot' }
+                 ],
+                 rightItems: [
+                     { name: "人工智慧", correctValue: 'ai' },
+                     { name: "物聯網", correctValue: 'iot' },
+                     { name: "大數據", correctValue: 'big_data' }
+                 ]
+            }
+        ];
+
+        let currentQuestionIndex = 0;
+        let questionStatuses = Array(quizData.length).fill(null); 
+        let answers = {}; 
+
+        const colorPalettes = [
+            { bg: 'bg-red-100', border: 'border-red-400', text: 'text-red-800', hex: '#fee2e2' }, 
+            { bg: 'bg-orange-100', border: 'border-orange-400', text: 'text-orange-800', hex: '#ffedd5' }, 
+            { bg: 'bg-green-100', border: 'border-green-400', text: 'text-green-800', hex: '#d1fae5' }, 
+            { bg: 'bg-blue-100', border: 'border-blue-400', text: 'text-blue-800', hex: '#dbeafe' }, 
+            { bg: 'bg-purple-100', border: 'border-purple-400', text: 'text-purple-800', hex: '#f3e8ff' }, 
+            { bg: 'bg-pink-100', border: 'border-pink-400', text: 'text-pink-800', hex: '#fce7f3' }, 
+            { bg: 'bg-teal-100', border: 'border-teal-400', text: 'text-teal-800', hex: '#ccfbf1' } 
+        ];
+        const classificationColors = [
+             { id: 0, name: "傳統系統平台", colorClass: 'bg-yellow-200', hex: '#fef08a', headerHex: '#fcd34d' }, 
+             { id: 1, name: "新興系統平台", colorClass: 'bg-teal-200', hex: '#99f6e4', headerHex: '#5eead4' }    
+        ];
+
+        function shuffleArray(array) {
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
+            }
+        }
+
+        // --- Helper: Create Drag Item ---
+        function createDragItem(id, text, palette, isQ3 = false) {
+            const div = document.createElement('div');
+            div.id = id;
+            div.className = `drag-item ${palette.bg} ${palette.border} ${palette.text} shadow-sm hover:shadow-md transition-all`;
+            // Ensure Q3 (now Q4/Q3 in code) items have proper style
+            if (isQ3) {
+                div.classList.add('category-item'); 
+            }
+            div.dataset.initialBorderColor = palette.border.replace('border', '#').replace('400', '600'); 
+            div.draggable = true;
+            div.ondragstart = drag;
+            div.ontouchstart = touchStart;
+            div.ontouchend = touchEnd;
+            div.textContent = text;
+            return div;
+        }
+
+        // --- Q2 Checkbox Helpers ---
+        function createCheckButton(platformName, columnIndex) {
+            const uniqueId = `check-${platformName}-${columnIndex}`;
+            return `
+                <div class="check-box-wrapper">
+                    <div id="${uniqueId}" class="check-box" 
+                         onclick="toggleSelection('${platformName}', ${columnIndex}, this)">
+                        <span class="check-mark opacity-0">✓</span>
+                    </div>
+                </div>
+            `;
+        }
+        
+        function toggleSelection(platformName, columnIndex, element) {
+            const currentAnswer = answers[currentQuestionIndex] || {};
+            const currentlySelected = currentAnswer[platformName];
+            
+            const row = element.closest('tr');
+            if (row) {
+                row.querySelectorAll('.check-box').forEach(box => {
+                    box.classList.remove('checked');
+                    box.querySelector('.check-mark').classList.add('opacity-0');
+                });
+            }
+
+            if (currentlySelected === columnIndex) {
+                currentAnswer[platformName] = -1;
+            } else {
+                element.classList.add('checked');
+                element.querySelector('.check-mark').classList.remove('opacity-0');
+                currentAnswer[platformName] = columnIndex;
+            }
+            
+            answers[currentQuestionIndex] = currentAnswer;
+        }
+
+        function loadTableSelectionAnswers() {
+            const savedAnswers = answers[currentQuestionIndex] || {};
+            for (const platformName in savedAnswers) {
+                const columnIndex = savedAnswers[platformName];
+                if (columnIndex !== -1) {
+                    const uniqueId = `check-${platformName}-${columnIndex}`;
+                    const element = document.getElementById(uniqueId);
+                    if (element) {
+                        element.classList.add('checked');
+                        element.querySelector('.check-mark').classList.remove('opacity-0');
+                    }
+                }
+            }
+        }
+        
+        // --- Core Navigation & Flow ---
+
+        function updateNavigationButtons() {
+            const prevBtn = document.getElementById('prev-btn');
+            const nextBtn = document.getElementById('next-btn');
+            
+            prevBtn.disabled = currentQuestionIndex === 0;
+            
+            if (currentQuestionIndex === quizData.length - 1) {
+                nextBtn.textContent = '完成測驗 (總結)';
+                nextBtn.classList.remove('bg-purple-500', 'hover:bg-purple-600');
+                nextBtn.classList.add('bg-green-500', 'hover:bg-green-600');
+            } else {
+                nextBtn.textContent = '下一題';
+                nextBtn.classList.remove('bg-green-500', 'hover:bg-green-600');
+                nextBtn.classList.add('bg-purple-500', 'hover:bg-purple-600');
+            }
+        }
+        
+        function prevQuestion() {
+            if (currentQuestionIndex > 0) {
+                currentQuestionIndex--;
+                loadQuestion();
+            }
+        }
+
+        function nextQuestion() {
+            if (currentQuestionIndex < quizData.length - 1) {
+                currentQuestionIndex++;
+                loadQuestion();
+            } else {
+                // Last question, perform final scoring and show results
+                showResults();
+            }
+        }
+
+        function startQuiz() {
+            currentQuestionIndex = 0;
+            score = 0;
+            questionStatuses = Array(quizData.length).fill(null);
+            answers = {}; // 重置所有答案
+            document.getElementById('start-screen').classList.add('hidden');
+            document.getElementById('question-display').classList.remove('hidden');
+            loadQuestion();
+        }
+
+        function loadQuestion() {
+            const currentQuestion = quizData[currentQuestionIndex];
+            document.getElementById('question-number').textContent = `#${currentQuestionIndex + 1}`;
+            const optionsContainer = document.getElementById('options-container');
+            optionsContainer.innerHTML = '';
+            
+            const oldCanvas = document.getElementById('matching-canvas');
+            if (oldCanvas) oldCanvas.remove();
+
+            if (currentQuestion.type === 'drag_and_drop') {
+                loadQ1_FillBlanks(currentQuestion);
+            } else if (currentQuestion.type === 'table_selection') {
+                loadQ2_TableSelection(currentQuestion);
+            } else if (currentQuestion.type === 'dnd_units_reverse') {
+                loadQ3_UnitMatching(currentQuestion); // Q3: 單位配對 (反轉: 拖曳單元名稱到描述)
+            } else if (currentQuestion.type === 'category_bucket') {
+                loadQ4_Bucket(currentQuestion); // Q4: 應用實例
+            } else if (currentQuestion.type === 'category_slots') {
+                loadQ5_Slots(currentQuestion); // Q5: I/O 單元
+            } else if (currentQuestion.type === 'table_sort_random') { // NEW TYPE NAME
+                loadQ6_Table(currentQuestion); // Q6: 記憶體
+            } else if (currentQuestion.type === 'category_slots_gen') {
+                 loadQ7_GenerationSlots(currentQuestion); // Q7: 電腦世代
+            } else if (currentQuestion.type === 'drag_and_drop_2col') {
+                 loadQ8_TechMatch(currentQuestion); // Q8: 英文縮寫
+            } else {
+                optionsContainer.className = 'space-y-4 mb-8'; 
+                loadMultipleChoice(currentQuestion);
+            }
+            
+            updateNavigationButtons();
+        }
+
+        function checkAnswer() {
+            const currentQuestion = quizData[currentQuestionIndex];
+            let isCorrect = false;
+
+            if (currentQuestion.type === 'drag_and_drop') isCorrect = checkQ1();
+            else if (currentQuestion.type === 'table_selection') isCorrect = checkQ2_TableSelection(currentQuestion);
+            else if (currentQuestion.type === 'dnd_units_reverse') isCorrect = checkQ3_UnitMatching(currentQuestion);
+            else if (currentQuestion.type === 'category_bucket') isCorrect = checkQ4();
+            else if (currentQuestion.type === 'category_slots') isCorrect = checkQ5();
+            else if (currentQuestion.type === 'table_sort_random') isCorrect = checkQ6();
+            else if (currentQuestion.type === 'category_slots_gen') isCorrect = checkQ7_GenerationSlots();
+            else if (currentQuestion.type === 'drag_and_drop_2col') isCorrect = checkQ8_TechMatch();
+            else isCorrect = checkMultipleChoiceAnswer(currentQuestion); 
+
+            if (isCorrect) {
+                questionStatuses[currentQuestionIndex] = 1;
+            } else if (isCorrect === false) { 
+                questionStatuses[currentQuestionIndex] = 0;
+            }
+            
+            if (isCorrect === true) {
+                const nextBtn = document.getElementById('next-btn');
+                nextBtn.classList.add('animate-pulse', 'shadow-xl');
+                setTimeout(() => {
+                    nextBtn.classList.remove('animate-pulse', 'shadow-xl');
+                }, 1000);
+            }
+        }
+
+        // --- Drag & Drop Handlers (Unified) ---
+
+        function drag(event) {
+            event.dataTransfer.setData("text/plain", event.target.id);
+            if (event.target.dataset.value) event.dataTransfer.setData("value", event.target.dataset.value);
+            if (event.target.dataset.categoryId) event.dataTransfer.setData("categoryId", event.target.dataset.categoryId);
+            if (event.target.dataset.unitId) event.dataTransfer.setData("unitId", event.target.dataset.unitId);
+            if (event.target.dataset.typeId) event.dataTransfer.setData("typeId", event.target.dataset.typeId);
+            if (event.target.dataset.correctValue) event.dataTransfer.setData("correctValue", event.target.dataset.correctValue);
+
+            setTimeout(() => { event.target.classList.add('dragging'); }, 0);
+        }
+
+        function allowDrop(event) { event.preventDefault(); }
+
+        function dragEnter(event) {
+            const target = event.target.closest('.drop-zone, .category-target, .fixed-slot');
+            if (target) target.classList.add('drag-over');
+        }
+
+        function dragLeave(event) {
+            const target = event.target.closest('.drop-zone, .category-target, .fixed-slot');
+            if (target) target.classList.remove('drag-over');
+        }
+
+        function touchStart(event) {
+            const item = event.target.closest('.drag-item, .category-item, .category-item-standard, .unit-match-item');
+            if (item) item.classList.add('dragging');
+        }
+        function touchEnd(event) {
+            const item = event.target.closest('.drag-item, .category-item, .category-item-standard, .unit-match-item');
+            if (item) item.classList.remove('dragging');
+        }
+        function touchMove(e) {} 
+        
+        // Q1 專用的 drop handler (拖曳填空)
+        function dropQ1(event) {
+            event.preventDefault();
+            const id = event.dataTransfer.getData("text/plain");
+            const el = document.getElementById(id);
+            let dropTarget = event.target.closest('.drop-zone');
+            
+            if (dropTarget && dropTarget.children.length === 0) {
+                el.classList.remove('dragging');
+                el.style.margin = '0';
+                dropTarget.appendChild(el);
+                dropTarget.classList.remove('drag-over');
+                dropTarget.classList.add('filled');
+            } else if (el) {
+                el.classList.remove('dragging');
+            }
+        }
+        
+        // Q3, Q5, Q6, Q7, Q8 專用的 drop handler (固定 Slot - LIFO 替換邏輯)
+        function dropSlotLIFO(event) {
+            event.preventDefault();
+            const id = event.dataTransfer.getData("text/plain");
+            const el = document.getElementById(id);
+            let targetSlot = event.target.closest('.fixed-slot');
+
+            if (targetSlot) {
+                if (targetSlot.children.length > 0) {
+                    const oldItem = targetSlot.firstElementChild;
+                    // Determine source ID based on current question index
+                    let sourceId;
+                    if (currentQuestionIndex === 2) sourceId = 'q3-unit-source'; // Q3: Unit Match
+                    else if (currentQuestionIndex === 3) sourceId = 'q4-source'; // Q4: Bucket
+                    else if (currentQuestionIndex === 4) sourceId = 'q5-source'; // Q5: I/O Slots
+                    else if (currentQuestionIndex === 5) sourceId = 'q6-source'; // Q6: Memory Table
+                    else if (currentQuestionIndex === 6) sourceId = 'q7-source'; // Q7: Generation
+                    else if (currentQuestionIndex === 7) sourceId = 'q8-source'; // Q8: Tech Match
+
+                    if (sourceId) {
+                        const source = document.getElementById(sourceId);
+                        if(source) {
+                             source.appendChild(oldItem);
+                             oldItem.style.margin = ''; 
+                             oldItem.style.width = ''; // Restore
+                             if(currentQuestionIndex === 7) oldItem.style.width = '150px'; // Q8 override
+                             if(currentQuestionIndex === 5) oldItem.style.width = '100px'; // Q6 override
+                        }
+                    }
+                }
+                
+                el.classList.remove('dragging');
+                
+                targetSlot.appendChild(el);
+                targetSlot.classList.remove('drag-over');
+                el.style.margin = '0';
+                el.style.width = '100%';
+            } else if (el) {
+                el.classList.remove('dragging');
+            }
+        }
+        
+        // Q4 專用的 drop handler (Bucket - LIFO 替換邏輯)
+        function dropQ3_LIFO(event) {
+            event.preventDefault();
+            const id = event.dataTransfer.getData("text/plain");
+            const el = document.getElementById(id);
+            const itemContainer = event.target.closest('.item-container');
+            const targetBucket = itemContainer ? itemContainer.closest('.category-target') : null;
+
+            if (!targetBucket) {
+                 if (el) el.classList.remove('dragging');
+                 return;
+            }
+
+            const sourceWrapper = document.getElementById('q4-source'); // Q4 Source ID
+
+            if (itemContainer && sourceWrapper) {
+                if (itemContainer.children.length > 0) {
+                    const oldItem = itemContainer.firstElementChild;
+                    oldItem.style.margin = '4px'; 
+                    oldItem.style.width = '110px'; 
+                    sourceWrapper.appendChild(oldItem);
+                    oldItem.classList.remove('dragging');
+                }
+                
+                el.classList.remove('dragging');
+                itemContainer.appendChild(el);
+                targetBucket.classList.remove('drag-over');
+                
+                el.style.margin = '0'; 
+                el.style.width = '100%'; 
+            } else if (el) {
+                el.classList.remove('dragging');
+            }
+        }
+        
+        // --- Q1: Fill Blanks ---
+        function loadQ1_FillBlanks(q) {
+            document.getElementById('question-text').textContent = q.question;
+            const wrapper = document.getElementById('question-text');
+            const container = document.getElementById('options-container');
+            
+            wrapper.innerHTML = q.question.replace(/\[__\]/g, (match, index) => 
+                `<span class="drop-zone" ondragover="allowDrop(event)" ondrop="dropQ1(event)" ondragenter="dragEnter(event)" ondragleave="dragLeave(event)"></span>`
+            );
+
+            const pool = [...q.options];
+            shuffleArray(pool);
+            const sourceDiv = document.createElement('div');
+            sourceDiv.id = 'q1-source';
+            sourceDiv.className = 'flex flex-wrap justify-center gap-4 bg-white p-4 rounded-xl border-2 border-dashed border-gray-300';
+            
+            pool.forEach((opt, i) => {
+                const el = createDragItem(`q1-item-${i}`, opt, colorPalettes[i%7]);
+                el.dataset.value = opt;
+                sourceDiv.appendChild(el);
+            });
+            container.appendChild(sourceDiv);
+        }
+
+        function checkQ1() {
+            let correct = true;
+            const zones = document.querySelectorAll('.drop-zone');
+            
+            zones.forEach((zone, i) => {
+                const item = zone.querySelector('.drag-item');
+                const answer = quizData[currentQuestionIndex].blanks[i];
+                
+                zone.style.borderBottomColor = '#a855f7'; // Reset
+                if (item) item.style.backgroundColor = ''; // Reset
+                
+                if (!item || item.dataset.value !== answer) {
+                    correct = false;
+                    zone.style.borderBottomColor = '#ef4444';
+                    if (item) item.style.backgroundColor = '#fca5a5';
+                } else {
+                    zone.style.borderBottomColor = '#22c55e';
+                    item.style.backgroundColor = '#bbf7d0';
+                }
+            });
+            if (correct) showMessage("✨ 全對！太棒了！", "bg-green-500");
+            else showMessage("❌ 有錯誤喔，請再檢查一下順序！", "bg-red-500");
+            return correct;
+        }
+
+        // --- Q2: Table Selection ---
+        function loadQ2_TableSelection(q) {
+            document.getElementById('question-text').textContent = q.question;
+            const container = document.getElementById('options-container');
+
+            const table = document.createElement('table');
+            table.className = 'table-check-container';
+
+            // Define classification types and randomize order
+            const classificationMap = [
+                { id: 0, name: "傳統系統平台", colorClass: 'bg-yellow-200', hex: '#fef08a', headerHex: '#fcd34d' }, // Yellow-300
+                { id: 1, name: "新興系統平台", colorClass: 'bg-teal-200', hex: '#99f6e4', headerHex: '#5eead4' }    // Teal-300
+            ];
+            const classificationTypes = [...classificationMap];
+            shuffleArray(classificationTypes); 
+
+            // 1. Header Row
+            const thead = table.createTHead();
+            const headerRow = thead.insertRow();
+            
+            // Col 1: 平台種類
+            const th0 = document.createElement('th');
+            th0.textContent = q.columns[0];
+            headerRow.appendChild(th0);
+
+            // Col 2 & 3: Randomized Classification Titles (Apply TH Background Color)
+            classificationTypes.forEach(type => {
+                const th = document.createElement('th');
+                th.textContent = type.name;
+                // 使用 headerHex 設置 TH 背景色
+                th.style.backgroundColor = type.headerHex; 
+                th.style.color = '#1f2937'; // Dark text for light background
+                th.dataset.columnId = type.id; // Store ID for reference
+                headerRow.appendChild(th);
+            });
+
+            // 2. Data Rows
+            const tbody = table.createTBody();
+            const rowsData = [...q.platformData];
+            shuffleArray(rowsData); // 隨機排列平台種類
+
+            rowsData.forEach((platform, rowIndex) => {
+                const row = tbody.insertRow();
+                const platformPalette = colorPalettes[rowIndex % colorPalettes.length]; // Row color
+                const initialRowColor = platformPalette.hex;
+                
+                // Column 1: Platform Name (with distinct row color and border)
+                const nameCell = row.insertCell();
+                nameCell.textContent = platform.name;
+                nameCell.style.backgroundColor = initialRowColor; 
+                nameCell.dataset.initialColor = initialRowColor; // Store initial color
+                
+                // Columns 2 & 3: Checkboxes
+                classificationTypes.forEach((type) => { 
+                    const cell = row.insertCell();
+                    cell.dataset.classificationId = type.id; // Store absolute ID (0 or 1) for checking
+                    cell.style.backgroundColor = type.hex; // Apply background color based on hex (lighter)
+                    cell.dataset.columnColor = type.hex; // Store column color for resetting
+                    cell.innerHTML = createCheckButton(platform.name, type.id); // type.id is the absolute classification ID
+                });
+            });
+            
+            container.appendChild(table);
+            
+            // 載入之前儲存的答案狀態
+            loadTableSelectionAnswers();
+        }
+
+        function checkQ2_TableSelection(q) {
+            const userAnswers = answers[currentQuestionIndex] || {};
+            let allCorrect = true;
+            let answeredCount = 0;
+            const rows = document.querySelectorAll('.table-check-container tbody tr');
+            
+            // 0. 重置顏色 (清除所有檢查標記，恢復初始或欄位色)
+            rows.forEach(tr => {
+                const nameCell = tr.querySelector('td:first-child');
+                nameCell.style.backgroundColor = nameCell.dataset.initialColor; 
+                tr.querySelectorAll('td:not(:first-child)').forEach(td => {
+                    td.style.backgroundColor = td.dataset.columnColor; // Reset to column color
+                });
+            });
+
+
+            q.platformData.forEach(platform => {
+                const expected = platform.classification;
+                const userSelected = userAnswers[platform.name];
+                const row = Array.from(rows).find(r => r.querySelector('td:first-child').textContent === platform.name);
+                if (!row) return; 
+
+                const nameCell = row.querySelector('td:first-child');
+                const clickedCell = userSelected !== undefined && userSelected !== -1 
+                                  ? row.querySelector(`td[data-classification-id="${userSelected}"]`) 
+                                  : null;
+
+                if (userSelected !== undefined && userSelected !== -1) {
+                    answeredCount++;
+                    if (userSelected === expected) {
+                        // 正確：不標註綠色，維持原色
+                    } else {
+                        // 錯誤：紅色標註只在平台種類欄位
+                        allCorrect = false;
+                        nameCell.style.backgroundColor = '#fca5a5'; // Red on name cell 
+                        
+                        // 錯誤的勾選欄位也使用紅色背景
+                        if (clickedCell) clickedCell.style.backgroundColor = '#fca5a5';
+                        
+                        // 標記正確答案欄位 (淡黃色標記)
+                        const correctCell = row.querySelector(`td[data-classification-id="${expected}"]`);
+                        if (correctCell) {
+                             correctCell.style.backgroundColor = '#fef08a';
+                        }
+                    }
+                }
+            });
+            
+            if (answeredCount < q.platformData.length) {
+                showMessage("請完成所有平台的分類勾選！", "bg-yellow-500");
+                return false;
+            }
+
+            if (allCorrect) { showMessage("✨ 分類完全正確！", "bg-green-500"); return true; }
+            else { showMessage("❌ 分類有誤，請檢查標註紅色的項目！", "bg-red-500"); return false; }
+        }
+
+        // --- Q3: Unit Matching (Structure Swapped) ---
+        function loadQ3_UnitMatching(q) {
+            document.getElementById('question-text').textContent = q.question;
+            const container = document.getElementById('options-container');
+
+            // Source Items (5 Major Units - Draggable)
+            const source = document.createElement('div');
+            source.id = 'q3-unit-source';
+            source.className = 'flex flex-wrap justify-center gap-3 p-4 min-h-[110px] bg-gray-50 rounded-xl mb-4';
+            
+            const units = [...q.units];
+            shuffleArray(units);
+
+            units.forEach((unit, i) => {
+                const palette = colorPalettes[i % colorPalettes.length];
+                const el = createDragItem(`q3-unit-item-${i}`, unit.name, palette);
+                el.innerHTML = `<span class="text-xl mr-1">${unit.emoji}</span><span>${unit.name}</span>`;
+                el.dataset.unitId = unit.unitId;
+                el.classList.add('category-item-standard');
+                source.appendChild(el);
+            });
+            container.appendChild(source);
+
+            // Targets (Function Descriptions with Slots)
+            const slotsWrapper = document.createElement('div');
+            slotsWrapper.className = 'grid grid-cols-1 md:grid-cols-5 gap-4'; 
+            
+            const descs = [...q.descriptions];
+            // Don't shuffle description order for readability, or shuffle if you want harder challenge. 
+            // Let's shuffle to make it a real matching task.
+            shuffleArray(descs);
+
+            descs.forEach((desc, i) => {
+                const slotContainer = document.createElement('div');
+                // Style based on description logic or just generic
+                slotContainer.className = `flex flex-col items-center p-3 rounded-xl border-2 ${desc.color} shadow-md q3-desc-box`;
+                
+                const text = document.createElement('div');
+                text.className = 'q3-desc-text';
+                text.textContent = desc.text;
+                slotContainer.appendChild(text);
+
+                const slot = document.createElement('div');
+                slot.className = 'fixed-slot unit-match-slot';
+                slot.dataset.expectedUnitId = desc.unitId;
+                slot.ondragover = allowDrop;
+                slot.ondrop = dropSlotLIFO; 
+                slot.ondragenter = dragEnter;
+                slot.ondragleave = dragLeave;
+                
+                slotContainer.appendChild(slot);
+                slotsWrapper.appendChild(slotContainer);
+            });
+            container.appendChild(slotsWrapper);
+        }
+
+        function checkQ3_UnitMatching(q) {
+            let correct = true;
+            const slots = document.querySelectorAll('.unit-match-slot');
+            let filledCount = 0;
+
+            slots.forEach(slot => {
+                const item = slot.children.length > 0 ? slot.firstElementChild : null;
+                
+                slot.style.borderColor = '#cbd5e1'; 
+                if (item) item.style.borderColor = ''; 
+
+                if (item) {
+                    filledCount++;
+                    const droppedUnitId = item.dataset.unitId;
+                    const expectedUnitId = slot.dataset.expectedUnitId;
+                    
+                    if (droppedUnitId !== expectedUnitId) {
+                        correct = false;
+                        item.style.borderColor = 'red';
+                    } else {
+                        item.style.borderColor = '#22c55e';
+                    }
+                } else {
+                    correct = false;
+                    slot.style.borderColor = 'red'; // Empty slot is wrong
+                }
+            });
+
+            if (filledCount < slots.length) {
+                showMessage("還有單元沒有配對！", "bg-yellow-500");
+                return false;
+            }
+
+            if(correct) { showMessage("✨ 五大單元配對正確！", "bg-green-500"); return true; }
+            else { showMessage("❌ 配對有誤，請檢查紅框項目", "bg-red-500"); return false; }
+        }
+
+        // --- Q4: Bucket Sort (Application Category - LIFO) ---
+        function loadQ4_Bucket(q) {
+            document.getElementById('question-text').textContent = q.question;
+            const container = document.getElementById('options-container');
+
+            // Source
+            const source = document.createElement('div');
+            source.id = 'q4-source';
+            source.className = 'flex flex-wrap justify-center gap-2 p-4 min-h-[100px] border-b-2 border-gray-100 mb-4';
+            const items = [...q.items];
+            shuffleArray(items);
+            items.forEach((item, i) => {
+                const el = createDragItem(`q4-item-${i}`, item.name, colorPalettes[i%7], true); 
+                el.innerHTML = `<span class="emoji">${item.emoji}</span><span>${item.name}</span>`;
+                el.classList.add('category-item'); // Use generic class
+                el.dataset.categoryId = item.categoryId;
+                source.appendChild(el);
+            });
+            container.appendChild(source);
+
+            // Buckets
+            const grid = document.createElement('div');
+            grid.className = 'grid grid-cols-2 md:grid-cols-4 gap-4';
+            q.categories.forEach(cat => {
+                const bucket = document.createElement('div');
+                bucket.className = `category-target ${cat.color} flex flex-col items-center`;
+                bucket.dataset.categoryId = cat.id;
+                // item-container is the actual drop target
+                // Attach D&D handlers to item-container for LIFO logic
+                bucket.innerHTML = `<h3 class="font-bold mb-2">${cat.name}</h3><div class="item-container flex flex-wrap justify-center w-full min-h-[100px]" ondragover="allowDrop(event)" ondrop="dropQ3_LIFO(event)" ondragenter="dragEnter(event)" ondragleave="dragLeave(event)"></div>`;
+                grid.appendChild(bucket);
+            });
+            container.appendChild(grid);
+        }
+
+        function checkQ4() {
+            let correct = true;
+            // Select all items currently NOT in the source, but inside a bucket
+            const items = document.querySelectorAll('#q4-source ~ .grid .category-item'); 
+            
+            items.forEach(item => {
+                const bucket = item.closest('.category-target');
+                // Reset border colors first
+                item.style.borderColor = item.dataset.initialBorderColor || '';
+                
+                if (!bucket || bucket.dataset.categoryId !== item.dataset.categoryId) {
+                    correct = false;
+                    item.style.borderColor = 'red';
+                } else {
+                    item.style.borderColor = '#22c55e';
+                }
+            });
+            
+            if (document.getElementById('q4-source').children.length > 0) {
+                showMessage("還有方塊沒分類喔！", "bg-yellow-500");
+                return false;
+            }
+
+            if(correct) { showMessage("✨ 分類正確！", "bg-green-500"); return true; }
+            else { showMessage("❌ 分類有誤，請檢查紅框項目", "bg-red-500"); return false; }
+        }
+
+
+        // --- Q5: Slots (Input/Output) ---
+        function loadQ5_Slots(q) {
+            document.getElementById('question-text').textContent = q.question;
+            const container = document.getElementById('options-container');
+
+            // Source
+            const source = document.createElement('div');
+            source.id = 'q5-source';
+            source.className = 'flex flex-wrap justify-center gap-3 p-4 min-h-[110px] bg-gray-50 rounded-xl mb-4';
+            const items = [...q.items];
+            shuffleArray(items);
+            items.forEach((item, i) => {
+                const el = createDragItem(`q5-item-${i}`, item.name, colorPalettes[i%7]);
+                el.innerHTML = `<span class="emoji">${item.emoji}</span><span>${item.name}</span>`;
+                el.classList.add('category-item-standard'); 
+                el.dataset.categoryId = item.categoryId;
+                source.appendChild(el);
+            });
+            container.appendChild(source);
+
+            // Categories with Slots (2x2 grid layout per category)
+            const grid = document.createElement('div');
+            grid.className = 'grid grid-cols-1 md:grid-cols-2 gap-6'; 
+            
+            q.categories.forEach(cat => {
+                const section = document.createElement('div');
+                section.className = `p-4 rounded-xl ${cat.color}`;
+                section.innerHTML = `<h3 class="text-xl font-bold text-center mb-4 text-gray-700">${cat.name}</h3>`;
+                
+                const slotsDiv = document.createElement('div');
+                // Change layout to grid grid-cols-2 for 2x2 box arrangement
+                slotsDiv.className = 'slot-container grid grid-cols-2 gap-4 justify-items-center'; 
+                
+                for(let i=0; i<cat.slots; i++) {
+                    const slot = document.createElement('div');
+                    // FIX: 這裡的 fixed-slot 是 Q5 的作答區，需要顯示出來
+                    slot.className = 'fixed-slot';
+                    slot.dataset.expectedCat = cat.id;
+                    slot.ondragover = allowDrop;
+                    slot.ondrop = dropSlotLIFO; // LIFO Logic (Q5 uses its own sourceId)
+                    slot.ondragenter = dragEnter;
+                    slot.ondragleave = dragLeave;
+                    slotsDiv.appendChild(slot);
+                }
+                section.appendChild(slotsDiv);
+                grid.appendChild(section);
+            });
+            container.appendChild(grid);
+        }
+        function checkQ5() {
+            let correct = true;
+            const slots = document.querySelectorAll('.fixed-slot');
+            let filledCount = 0;
+
+            // Only check slots within the Q5 area to avoid conflict with other questions if any
+            // Since we rebuild options-container, document.querySelectorAll is fine for current Q
+            
+            slots.forEach(slot => {
+                const item = slot.children.length > 0 ? slot.firstElementChild : null;
+
+                slot.style.borderColor = '#cbd5e1'; // Reset
+                if (item) item.style.borderColor = ''; // Reset
+
+                if (item) {
+                    filledCount++;
+                    if (item.dataset.categoryId !== slot.dataset.expectedCat) {
+                        correct = false;
+                        item.style.borderColor = 'red';
+                    } else {
+                        item.style.borderColor = '#22c55e';
+                    }
+                } else {
+                    // Q5 requires all slots filled? The prompt implies "put devices into correct category". 
+                    // There are 8 items and 8 slots (4 input + 4 output). So yes.
+                    correct = false;
+                    slot.style.borderColor = 'red'; 
+                }
+            });
+
+            if (filledCount < 8) { // 8 total items
+                 showMessage("還有週邊設備沒分類喔！", "bg-yellow-500");
+                 return false;
+            }
+
+            if(correct) { showMessage("✨ IO 單元分類正確！", "bg-green-500"); return true; }
+            else { showMessage("❌ 分類有誤，請檢查紅框項目", "bg-red-500"); return false; }
+        }
+
+        // --- Q6: Table Sort (Memory) ---
+        function loadQ6_Table(q) {
+            document.getElementById('question-text').textContent = q.question;
+            const container = document.getElementById('options-container');
+
+            // Pick a random variation
+            const randomVar = q.variations[Math.floor(Math.random() * q.variations.length)];
+            
+            // Source (Pool of items) - Only 1 set remains (4 items total)
+            const source = document.createElement('div');
+            source.id = 'q6-source';
+            source.className = 'flex flex-wrap justify-center gap-3 p-4 min-h-[110px] bg-gray-50 rounded-xl mb-4 overflow-y-auto max-h-[150px]';
+            
+            // Create 1 set of choices
+            q.sourceItems.forEach((item, idx) => {
+                const el = createDragItem(`q6-item-${idx}`, item.name, colorPalettes[idx+2]); 
+                el.innerHTML = `<span class="emoji">${item.emoji}</span><span>${item.name}</span>`;
+                el.classList.add('category-item-standard');
+                el.dataset.typeId = item.id;
+                el.style.width = '100px';
+                el.style.height = '70px';
+                source.appendChild(el);
+            });
+            
+            container.appendChild(source);
+
+            // Table Rows
+            const tableWrapper = document.createElement('div');
+            tableWrapper.className = 'q5-table-wrapper';
+            
+            const rowDiv = document.createElement('div');
+            rowDiv.className = 'q5-row';
+            
+            // Start Label (Title - Large Font)
+            const labelTitle = document.createElement('div');
+            labelTitle.className = 'q5-speed-title'; // 使用特殊大標題樣式
+            labelTitle.innerHTML = `${randomVar.labelStart} <div class="font-normal text-sm text-gray-500">${randomVar.labelEnd}</div>`;
+            rowDiv.appendChild(labelTitle);
+
+            // Slots
+            const slotsDiv = document.createElement('div');
+            // Ensure horizontal layout with flex-nowrap
+            slotsDiv.className = 'q5-slots flex flex-row flex-nowrap gap-4';
+            
+            randomVar.order.forEach((correctType, sIdx) => {
+                const slot = document.createElement('div');
+                // FIX: 這裡的 fixed-slot 是 Q6 的作答區，需要顯示出來
+                slot.className = 'fixed-slot q5-target-slot';
+                slot.style.width = '100px'; 
+                slot.style.height = '70px'; 
+                slot.dataset.correctType = correctType; 
+                slot.ondragover = allowDrop;
+                slot.ondrop = dropSlotLIFO; // LIFO Logic (Q6 uses its own sourceId)
+                slot.ondragenter = dragEnter;
+                slot.ondragleave = dragLeave;
+                slotsDiv.appendChild(slot);
+            });
+            rowDiv.appendChild(slotsDiv);
+
+            tableWrapper.appendChild(rowDiv);
+            container.appendChild(tableWrapper);
+        }
+
+        function checkQ6() {
+            let correct = true;
+            const slots = document.querySelectorAll('.q5-target-slot');
+            let filledCount = 0;
+
+            slots.forEach(slot => {
+                const item = slot.children.length > 0 ? slot.firstElementChild : null;
+
+                slot.style.borderColor = '#cbd5e1'; // Reset
+                if (item) item.style.borderColor = ''; // Reset
+
+                if (item) {
+                    filledCount++;
+                    if (item.dataset.typeId !== slot.dataset.correctType) {
+                        correct = false;
+                        item.style.borderColor = 'red';
+                    } else {
+                        item.style.borderColor = '#22c55e';
+                    }
+                } else {
+                    correct = false;
+                    slot.style.borderColor = 'red'; 
+                }
+            });
+
+            if (filledCount < slots.length) {
+                showMessage("還有空格沒填滿喔！", "bg-yellow-500");
+                return false;
+            }
+
+            if(correct) { showMessage("✨ 排列順序正確！", "bg-green-500"); return true; }
+            else { showMessage("❌ 順序有誤，請再試試看！", "bg-red-500"); return false; }
+        }
+        
+        // --- Q7: Generation Slots ---
+        function loadQ7_GenerationSlots(q) {
+            document.getElementById('question-text').textContent = q.question;
+            const container = document.getElementById('options-container');
+
+            // Source (Items to drag)
+            const source = document.createElement('div');
+            source.id = 'q7-source';
+            source.className = 'flex flex-wrap justify-center gap-3 p-4 min-h-[110px] bg-gray-50 rounded-xl mb-4';
+            
+            const items = [...q.items];
+            shuffleArray(items);
+            items.forEach((item, i) => {
+                const el = createDragItem(`q7-item-${i}`, item.name, colorPalettes[i % colorPalettes.length]);
+                el.innerHTML = `<span class="emoji">${item.emoji}</span><span>${item.name}</span>`;
+                el.classList.add('category-item-standard');
+                el.dataset.categoryId = item.categoryId; // Gen ID
+                el.style.width = '140px';
+                el.style.height = '60px';
+                source.appendChild(el);
+            });
+            container.appendChild(source);
+
+            // Using Grid instead of Table for horizontal slots to ensure flexible layout
+            const genContainer = document.createElement('div');
+            genContainer.className = 'gen-container';
+
+            q.categories.forEach(cat => {
+                 const col = document.createElement('div');
+                 col.className = 'gen-column';
+                 
+                 const header = document.createElement('div');
+                 header.className = 'gen-header';
+                 header.textContent = cat.name;
+                 header.style.backgroundColor = cat.color.replace('bg-', 'var(--tw-bg-opacity, 1) '); // Tailwind hack or just map
+                 // Map tailwind bg class to style for simplicity in dynamic generation
+                 if(cat.color.includes('red')) header.style.backgroundColor = '#ef4444';
+                 if(cat.color.includes('orange')) header.style.backgroundColor = '#f97316';
+                 if(cat.color.includes('yellow')) header.style.backgroundColor = '#eab308';
+                 if(cat.color.includes('green')) header.style.backgroundColor = '#22c55e';
+                 if(cat.color.includes('blue')) header.style.backgroundColor = '#3b82f6';
+
+                 const body = document.createElement('div');
+                 body.className = 'gen-body';
+                 
+                 for(let i=0; i<cat.slots; i++) {
+                    const slot = document.createElement('div');
+                    // FIX: 使用 fixed-slot 確保可拖曳
+                    slot.className = 'fixed-slot gen-target-slot';
+                    slot.dataset.expectedCat = cat.id;
+                    slot.style.width = '140px'; 
+                    slot.style.height = '60px'; 
+                    slot.ondragover = allowDrop;
+                    slot.ondrop = dropSlotLIFO;
+                    slot.ondragenter = dragEnter;
+                    slot.ondragleave = dragLeave;
+                    body.appendChild(slot);
+                 }
+                 
+                 col.appendChild(header);
+                 col.appendChild(body);
+                 genContainer.appendChild(col);
+            });
+            container.appendChild(genContainer);
+        }
+
+        function checkQ7_GenerationSlots() {
+            let correct = true;
+            const slots = document.querySelectorAll('.gen-target-slot');
+            let filledCount = 0;
+
+            slots.forEach(slot => {
+                const item = slot.children.length > 0 ? slot.firstElementChild : null;
+                
+                slot.style.borderColor = '#cbd5e1'; // Reset
+                if (item) item.style.borderColor = ''; // Reset
+
+                if (item) {
+                    filledCount++;
+                    if (item.dataset.categoryId !== slot.dataset.expectedCat) {
+                        correct = false;
+                        item.style.borderColor = 'red';
+                    } else {
+                        item.style.borderColor = '#22c55e';
+                    }
+                } else {
+                    correct = false;
+                    slot.style.borderColor = 'red'; 
+                }
+            });
+
+            if (filledCount < slots.length) {
+                showMessage("還有元件沒有分類喔！", "bg-yellow-500");
+                return false;
+            }
+
+            if(correct) { showMessage("✨ 電腦世代分類正確！", "bg-green-500"); return true; }
+            else { showMessage("❌ 分類有誤，請檢查紅框項目", "bg-red-500"); return false; }
+        }
+
+        // --- Q8: Tech Match ---
+        function loadQ8_TechMatch(q) {
+            document.getElementById('question-text').textContent = q.question;
+            const container = document.getElementById('options-container');
+
+            // Source (English Abbreviations)
+            const source = document.createElement('div');
+            source.id = 'q8-source';
+            source.className = 'flex flex-wrap justify-center gap-3 p-4 min-h-[110px] bg-gray-50 rounded-xl mb-4';
+            
+            const items = [...q.leftItems];
+            shuffleArray(items);
+
+            items.forEach((item, i) => {
+                const palette = colorPalettes[i];
+                const el = createDragItem(`q8-item-${i}`, item.name, palette);
+                el.dataset.correctValue = item.value;
+                el.style.width = '150px';
+                el.style.height = '60px';
+                
+                // Increase font size for Q8 English items
+                el.style.fontSize = '1.8rem'; // Bigger font
+                el.style.fontWeight = 'bold';
+
+                source.appendChild(el);
+            });
+            container.appendChild(source);
+
+            // Targets (Chinese Names)
+            const targetsWrapper = document.createElement('div');
+            targetsWrapper.className = 'grid grid-cols-1 md:grid-cols-3 gap-4';
+            
+            const rightItems = [...q.rightItems];
+            shuffleArray(rightItems);
+
+            rightItems.forEach((target, i) => {
+                 const targetDiv = document.createElement('div');
+                 const palette = colorPalettes[i + 3];
+                 targetDiv.className = `p-4 rounded-xl border-4 border-dashed ${palette.border} ${palette.bg} flex flex-col items-center`;
+                 targetDiv.innerHTML = `<h3 class="font-bold text-lg text-gray-700">${target.name}</h3>`;
+
+                 const slot = document.createElement('div');
+                 slot.className = 'fixed-slot q8-target-slot mt-2';
+                 slot.style.width = '150px';
+                 slot.style.height = '60px';
+                 slot.dataset.expectedValue = target.correctValue;
+                 slot.ondragover = allowDrop;
+                 slot.ondrop = dropSlotLIFO;
+                 slot.ondragenter = dragEnter;
+                 slot.ondragleave = dragLeave;
+
+                 targetDiv.appendChild(slot);
+                 targetsWrapper.appendChild(targetDiv);
+            });
+            container.appendChild(targetsWrapper);
+        }
+
+        function checkQ8_TechMatch() {
+            let correct = true;
+            const slots = document.querySelectorAll('.q8-target-slot');
+            let filledCount = 0;
+
+            slots.forEach(slot => {
+                const item = slot.children.length > 0 ? slot.firstElementChild : null;
+
+                slot.style.borderColor = '#cbd5e1'; // Reset
+                if (item) item.style.borderColor = ''; // Reset
+
+                if (item) {
+                    filledCount++;
+                    if (item.dataset.correctValue !== slot.dataset.expectedValue) {
+                        correct = false;
+                        item.style.borderColor = 'red';
+                    } else {
+                        item.style.borderColor = '#22c55e';
+                    }
+                } else {
+                    correct = false;
+                    slot.style.borderColor = 'red'; 
+                }
+            });
+
+            if (filledCount < slots.length) {
+                showMessage("還有項目沒有配對喔！", "bg-yellow-500");
+                return false;
+            }
+
+            if(correct) { showMessage("✨ 英文縮寫配對正確！", "bg-green-500"); return true; }
+            else { showMessage("❌ 配對有誤，請檢查紅框項目！", "bg-red-500"); return false; }
+        }
+
+
+        // --- Final Scoring and Results ---
+
+        function showResults() {
+            // 計算最終分數
+            let finalScore = 0;
+            quizData.forEach((q, index) => {
+                if (questionStatuses[index] === 1) {
+                    finalScore++;
+                }
+            });
+
+            const total = quizData.length;
+            
+            document.getElementById('question-display').classList.add('hidden');
+            document.getElementById('result-display').classList.remove('hidden');
+
+            let message = '';
+            let icon = '';
+            let colorClass = '';
+
+            if (finalScore === total) {
+                message = "太神啦！完美滿分！";
+                icon = "🏆";
+                colorClass = "text-yellow-500";
+            } else if (finalScore >= total * 0.8) {
+                message = "很棒喔！繼續保持！";
+                icon = "🌟";
+                colorClass = "text-blue-500";
+            } else if (finalScore >= total * 0.6) {
+                message = "還不錯，再接再厲！";
+                icon = "🙂";
+                colorClass = "text-green-500";
+            } else {
+                message = "別氣餒，再複習一下！";
+                icon = "📚";
+                colorClass = "text-red-500";
+            }
+
+            document.getElementById('result-icon').textContent = icon;
+            document.getElementById('final-message').textContent = message;
+            document.getElementById('final-message').className = `text-3xl font-extrabold mb-2 ${colorClass}`;
+            document.getElementById('final-score-number').textContent = finalScore;
+            document.getElementById('final-score-text').textContent = `滿分是 ${total} 題`;
+        }
+
+        function restartQuiz() {
+            document.getElementById('result-display').classList.add('hidden');
+            startQuiz();
+        }
+
+        // 自定義訊息框 (自動隱藏並置於頂部中央)
+        function showMessage(msg, bgColor) {
+            let messageBox = document.getElementById('message-box');
+            if (!messageBox) {
+                messageBox = document.createElement('div');
+                messageBox.id = 'message-box';
+                document.body.appendChild(messageBox);
+            }
+            messageBox.textContent = msg;
+            messageBox.className = `fixed top-4 left-1/2 transform -translate-x-1/2 z-50 px-8 py-4 rounded-xl shadow-2xl text-white font-bold text-lg text-center transition-all duration-300 opacity-100 scale-100 ${bgColor} border-4 border-white`;
+            
+            setTimeout(() => {
+                const box = document.getElementById('message-box');
+                if (box) {
+                    box.classList.remove('opacity-100', 'scale-100');
+                    box.classList.add('opacity-0', 'scale-90');
+                    setTimeout(() => box.remove(), 300);
+                }
+            }, 3000); 
+        }
+    </script>
+</body>
+</html>
